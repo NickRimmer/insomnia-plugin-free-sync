@@ -1,0 +1,41 @@
+﻿.plugin-free-sync.configuration-dialog {
+  .buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  &.form-control {
+    .auto-save-checkbox {
+      display: flex;
+      align-items: center;
+
+      input[type=checkbox] {
+        float: unset;
+        display: initial;
+        margin: 0;
+        margin-left: var(--padding-sm);
+      }
+    }
+  }
+
+  .error-message {
+    color: #ff8b00;
+    padding: 4px 0 10px;
+
+    &.hide {
+      display: none;
+    }
+  }
+}
+
+// override insomnia parent styles
+.modal:has(.plugin-free-sync.configuration-dialog) {
+  &.modal--skinny .modal__content__wrapper {
+    width: 500px;
+  }
+
+  .modal__content {
+    padding-bottom: 20px;
+  }
+}

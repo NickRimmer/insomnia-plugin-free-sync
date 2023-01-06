@@ -1,4 +1,4 @@
-export interface InsomniaDialogOptions {
+export type InsomniaDialogOptions = {
   onHide?: () => void
   tall?: boolean
   skinny?: boolean
