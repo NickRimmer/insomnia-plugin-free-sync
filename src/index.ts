@@ -1,2 +1,3 @@
-import { workspaceActions } from './workspaceActions'
+import { workspaceActions } from './workspace-actions'
+
 module.exports.workspaceActions = workspaceActions
