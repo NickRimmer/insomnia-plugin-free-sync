@@ -1,32 +1,34 @@
 ﻿import './configuration-dialog.styles.scss'
 import React, { FC, useEffect, useState } from 'react'
 import { ConfigurationDialogProps } from './configuration-dialog.types'
+import { validatePath } from '../services/file-service'
+import { ConfigurationService } from '../services/configuration-service'
 import { Button } from './shared/button'
-
-const STORE_KEY_FILE_PATH = 'insomnia-plugin-free-sync-configuration-file-path'
-const STORE_KEY_AUTO_SAVE = 'insomnia-plugin-free-sync-configuration-auto-save'
 
 export const ConfigurationDialog: FC<ConfigurationDialogProps> = ({context}) => {
   const [pathInputValue, setPathInputValue] = useState<string | null | undefined>()
   const [isAutoSaveEnabled, setIsAutoSaveEnabled] = useState(false)
-  const [isPathValid, setIsPathValid] = useState(true)
+  const [isFilePathInputWrong, setIsFilePathInputWrong] = useState(true)
+  const configurationService = new ConfigurationService(context.store)
+
+  const validateFilePathInput = (path: string | null | undefined) => !path || validatePath(path)
 
   useEffect(() => {
-    context.store.getItem(STORE_KEY_FILE_PATH).then((currentPath: string | null) => {
+    configurationService.getCollectionFilePathAsync().then((currentPath: string | null) => {
       setPathInputValue(currentPath)
-      setIsPathValid(validatePath(currentPath))
+      setIsFilePathInputWrong(validateFilePathInput(currentPath))
     })
 
-    context.store.getItem(STORE_KEY_AUTO_SAVE).then((currentValue: string | null) => setIsAutoSaveEnabled(currentValue === String(true)))
+    configurationService.getAutoSaveOptionAsync().then(setIsAutoSaveEnabled)
   }, [])
 
   const savePath = (path: string) => {
-    setIsPathValid(validatePath(path))
-    context.store.setItem(STORE_KEY_FILE_PATH, path)
+    setIsFilePathInputWrong(validateFilePathInput(path))
+    configurationService.setCollectionFilePathAsync(path)
   }
 
   const onPathInputChange = (path: string) => {
-    setIsPathValid(validatePath(path))
+    setIsFilePathInputWrong(validatePath(path))
     setPathInputValue(path)
   }
 
@@ -40,8 +42,7 @@ export const ConfigurationDialog: FC<ConfigurationDialogProps> = ({context}) => 
 
   const onAutoSaveChanged = (checked: boolean) => {
     setIsAutoSaveEnabled(checked)
-    console.log(checked)
-    context.store.setItem(STORE_KEY_AUTO_SAVE, String(checked))
+    configurationService.setAutoSaveOptionAsync(checked)
   }
 
   return (
@@ -53,7 +54,7 @@ export const ConfigurationDialog: FC<ConfigurationDialogProps> = ({context}) => 
                onChange={e => onPathInputChange(e.target.value)}
                onBlur={e => savePath(e.target.value)}/>
       </div>
-      {!isPathValid && (<div className={`error-message`}>Path value is incorrect</div>)}
+      {!isFilePathInputWrong && (<div className={`error-message`}>Path value is incorrect</div>)}
       <div className="buttons">
         <Button icon="fa-file" onClick={onSelectFileClicked}>Select file...</Button>
         <label className="auto-save-checkbox">
@@ -66,5 +67,3 @@ export const ConfigurationDialog: FC<ConfigurationDialogProps> = ({context}) => 
     </div>
   )
 }
-
-const validatePath = (path: string | null | undefined) => !path || new RegExp('^(?:[a-z]:)?[\\/\\\\]{0,2}(?:[.\\/\\\\ ](?![.\\/\\\\\\n])|[^<>:"|?*.\\/\\\\ \\n])+$', 'gmi').exec(path) !== null
