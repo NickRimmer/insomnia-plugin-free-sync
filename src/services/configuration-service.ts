@@ -4,7 +4,7 @@ const STORE_KEY_FILE_PATH = 'insomnia-plugin-free-sync-configuration-file-path'
 const STORE_KEY_AUTO_SAVE = 'insomnia-plugin-free-sync-configuration-auto-save'
 
 export class ConfigurationService {
-  _store: InsomniaContextStore
+  private _store: InsomniaContextStore
 
   constructor(store: InsomniaContextStore) {
     this._store = store

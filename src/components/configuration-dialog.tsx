@@ -28,7 +28,7 @@ export const ConfigurationDialog: FC<ConfigurationDialogProps> = ({context}) => 
   }
 
   const onPathInputChange = (path: string) => {
-    setIsFilePathInputWrong(validatePath(path))
+    setIsFilePathInputWrong(validateFilePathInput(path))
     setPathInputValue(path)
   }
 
