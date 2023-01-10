@@ -1,7 +1,7 @@
 ﻿import { InsomniaContextData } from '../insomnia/types/context-data.types'
 import { ConfigurationService } from './configuration-service'
 import { InsomniaWorkspace } from '../insomnia/types/workspace.types'
-import { writeFile } from 'fs/promises'
+import { readFile, writeFile } from 'fs/promises'
 
 export const validatePath = (path: string | null | undefined): boolean =>
   path !== null &&
@@ -22,7 +22,7 @@ export class FileService {
     this._workspace = workspace
   }
 
-  async writeCollectionFileAsync(): Promise<boolean> {
+  async exportCollectionFileAsync(): Promise<boolean> {
     // get path to save
     const path = await this._configurationService.getCollectionFilePathAsync()
     if (!validatePath(path)) return false
@@ -31,7 +31,19 @@ export class FileService {
     const dataJson = await this.getDataJsonAsync()
     if (!dataJson) return false
 
-    await writeFile(path!, dataJson)
+    await writeFile(path!, dataJson, {encoding: 'utf8'})
+    return true
+  }
+
+  async importCollectionFileAsync(): Promise<boolean> {
+    // get path to save
+    const path = await this._configurationService.getCollectionFilePathAsync()
+    if (!validatePath(path)) return false
+
+    const dataJson = await readFile(path!, {encoding: 'utf8'})
+    if (!dataJson) return false
+
+    await this._data.import.raw(dataJson)
     return true
   }
 
