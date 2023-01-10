@@ -46,18 +46,18 @@ export class WorkspaceService {
       format: 'json',
       workspace: this._workspace,
     })
-
     if (!dataJson) return null
 
-    // reduce not necessary data
+    const modelSettings = this._configurationService.getModelsAsync()
     const data = JSON.parse(dataJson)
 
+    // reduce not necessary data
     data.resources.forEach((resource: any) => {
       // modified value updates even without updates of resource
       if (resource.modified && resource.created)
         resource.modified = resource.created
 
-      // remove secure cookies
+      // remove secure cookies //TODO make it configurable as well
       if (resource._type === 'cookie_jar')
         resource.cookies = resource.cookies.filter((cookie: any) => !cookie.secure)
     })

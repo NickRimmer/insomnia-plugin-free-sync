@@ -31,17 +31,9 @@ export class ConfigurationService {
 
   async getModelsAsync(): Promise<SyncModels> {
     const jsonStr = await this._store.getItem(STORE_KEY_MODELS)
-    const defaultValue = {
-      workspace: true,
-      request: true,
-      environment: true,
-      api_spec: true,
-      cookie_jar: false,
-      unit_test: false,
-    } as SyncModels
 
-    if (!jsonStr) return defaultValue
-    return {...defaultValue, ...JSON.parse(jsonStr)}
+    if (!jsonStr) return defaultModelsConfiguration
+    return {...defaultModelsConfiguration, ...JSON.parse(jsonStr)}
   }
 
   setModelsAsync(data: SyncModels): Promise<void> {
@@ -49,3 +41,14 @@ export class ConfigurationService {
     return this._store.setItem(STORE_KEY_MODELS, jsonStr)
   }
 }
+
+export const defaultModelsConfiguration = {
+  workspace: true,
+  request: true,
+  apiSpec: true,
+  unitTest: true,
+  environment_global: true,
+  environment_custom: true,
+  cookies_not_secure: true,
+  cookies_secure: false,
+} as SyncModels 
