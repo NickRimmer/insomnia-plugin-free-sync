@@ -6,17 +6,17 @@ const STORE_KEY_AUTO_SAVE = 'insomnia-plugin-free-sync-configuration-auto-save'
 const STORE_KEY_MODELS = 'insomnia-plugin-free-sync-configuration-models'
 
 export class ConfigurationService {
-  private _store: InsomniaContextStore
+  private readonly _store: InsomniaContextStore
 
   constructor(store: InsomniaContextStore) {
     this._store = store
   }
 
-  getCollectionFilePathAsync(): Promise<string | null> {
+  getWorkspaceFilePathAsync(): Promise<string | null> {
     return this._store.getItem(STORE_KEY_FILE_PATH)
   }
 
-  setCollectionFilePathAsync(path: string): Promise<void> {
+  setWorkspaceFilePathAsync(path: string): Promise<void> {
     return this._store.setItem(STORE_KEY_FILE_PATH, path)
   }
 

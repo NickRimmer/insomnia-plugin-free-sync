@@ -23,7 +23,7 @@ export const ConfigurationDialog: FC<ConfigurationDialogProps> = ({context}) => 
   const validateFilePathInput = (path: string | null | undefined) => !path || validatePath(path)
 
   useEffect(() => {
-    configurationService.getCollectionFilePathAsync().then((currentPath: string | null) => {
+    configurationService.getWorkspaceFilePathAsync().then((currentPath: string | null) => {
       setPathInputValue(currentPath)
       setIsFilePathInputWrong(validateFilePathInput(currentPath))
     })
@@ -37,7 +37,7 @@ export const ConfigurationDialog: FC<ConfigurationDialogProps> = ({context}) => 
 
   const savePath = (path: string) => {
     setIsFilePathInputWrong(validateFilePathInput(path))
-    configurationService.setCollectionFilePathAsync(path)
+    configurationService.setWorkspaceFilePathAsync(path)
   }
 
   const onPathInputChange = (path: string) => {
