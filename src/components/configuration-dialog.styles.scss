@@ -9,6 +9,7 @@
     .auto-save-checkbox {
       display: flex;
       align-items: center;
+      color: var(--hl);
 
       input[type=checkbox] {
         float: unset;
@@ -38,7 +39,7 @@
     justify-content: space-between;
 
     label {
-      width: 50%;
+      width: 47%;
       display: flex;
       align-items: center;
       margin: 0;

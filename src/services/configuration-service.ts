@@ -6,17 +6,17 @@ const STORE_KEY_AUTO_SAVE = 'insomnia-plugin-free-sync-configuration-auto-save'
 const STORE_KEY_MODELS = 'insomnia-plugin-free-sync-configuration-models'
 
 export class ConfigurationService {
-  private _store: InsomniaContextStore
+  private readonly _store: InsomniaContextStore
 
   constructor(store: InsomniaContextStore) {
     this._store = store
   }
 
-  getCollectionFilePathAsync(): Promise<string | null> {
+  getWorkspaceFilePathAsync(): Promise<string | null> {
     return this._store.getItem(STORE_KEY_FILE_PATH)
   }
 
-  setCollectionFilePathAsync(path: string): Promise<void> {
+  setWorkspaceFilePathAsync(path: string): Promise<void> {
     return this._store.setItem(STORE_KEY_FILE_PATH, path)
   }
 
@@ -31,17 +31,9 @@ export class ConfigurationService {
 
   async getModelsAsync(): Promise<SyncModels> {
     const jsonStr = await this._store.getItem(STORE_KEY_MODELS)
-    const defaultValue = {
-      workspace: true,
-      request: true,
-      environment: true,
-      api_spec: true,
-      cookie_jar: false,
-      unit_test: false,
-    } as SyncModels
 
-    if (!jsonStr) return defaultValue
-    return {...defaultValue, ...JSON.parse(jsonStr)}
+    if (!jsonStr) return defaultModelsConfiguration
+    return {...defaultModelsConfiguration, ...JSON.parse(jsonStr)}
   }
 
   setModelsAsync(data: SyncModels): Promise<void> {
@@ -49,3 +41,13 @@ export class ConfigurationService {
     return this._store.setItem(STORE_KEY_MODELS, jsonStr)
   }
 }
+
+export const defaultModelsConfiguration = {
+  apiSpec: true,
+  environmentBase: true,
+  environmentCustom: true,
+  request: true,
+  unitTest: true,
+  cookiesNotSecure: true,
+  cookiesSecure: false,
+} as SyncModels 

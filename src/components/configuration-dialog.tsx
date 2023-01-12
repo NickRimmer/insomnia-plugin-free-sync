@@ -2,42 +2,34 @@
 import React, { FC, useEffect, useState } from 'react'
 import { ConfigurationDialogProps, SyncModels } from './configuration-dialog.types'
 import { validatePath } from '../services/file-service'
-import { ConfigurationService } from '../services/configuration-service'
+import { ConfigurationService, defaultModelsConfiguration } from '../services/configuration-service'
 import { Button } from './shared/button'
 
 export const ConfigurationDialog: FC<ConfigurationDialogProps> = ({context}) => {
   const [pathInputValue, setPathInputValue] = useState<string | null | undefined>()
   const [isAutoSaveEnabled, setIsAutoSaveEnabled] = useState(false)
   const [isFilePathInputWrong, setIsFilePathInputWrong] = useState(true)
-  const [syncModels, setSyncModels] = useState<SyncModels>({
-    api_spec: false,
-    cookie_jar: false,
-    environment: false,
-    request: false,
-    unit_test: false,
-    workspace: false,
-  })
+  const [syncModels, setSyncModels] = useState<SyncModels>(defaultModelsConfiguration)
 
   const configurationService = new ConfigurationService(context.store)
 
   const validateFilePathInput = (path: string | null | undefined) => !path || validatePath(path)
 
   useEffect(() => {
-    configurationService.getCollectionFilePathAsync().then((currentPath: string | null) => {
+    configurationService.getWorkspaceFilePathAsync().then((currentPath: string | null) => {
       setPathInputValue(currentPath)
       setIsFilePathInputWrong(validateFilePathInput(currentPath))
     })
 
     configurationService.getAutoSaveOptionAsync().then(setIsAutoSaveEnabled)
     configurationService.getModelsAsync().then(v => {
-      console.log(v)
       setSyncModels(v)
     })
   }, [])
 
   const savePath = (path: string) => {
     setIsFilePathInputWrong(validateFilePathInput(path))
-    configurationService.setCollectionFilePathAsync(path)
+    configurationService.setWorkspaceFilePathAsync(path)
   }
 
   const onPathInputChange = (path: string) => {
@@ -77,8 +69,9 @@ export const ConfigurationDialog: FC<ConfigurationDialogProps> = ({context}) => 
       <div className='buttons'>
         <Button icon='fa-file' onClick={onSelectFileClicked}>Select file...</Button>
         <label className='auto-save-checkbox'>
-          Periodically auto save
+          Auto save on changes
           <input type={'checkbox'}
+                 disabled={true}
                  onChange={e => onAutoSaveChanged(e.target.checked)}
                  checked={isAutoSaveEnabled}/>
         </label>
@@ -89,19 +82,24 @@ export const ConfigurationDialog: FC<ConfigurationDialogProps> = ({context}) => 
       <h2 className='models-title'>Data to synchronize</h2>
       <div className='models-list'>
         <label>
-          <input type={'checkbox'} checked={syncModels.api_spec}
-                 onChange={e => onModelsChanged({api_spec: e.target.checked})}/>
-          Api specification JSON
+          <input type={'checkbox'} checked={syncModels.environmentBase}
+                 onChange={e => onModelsChanged({environmentBase: e.target.checked})}/>
+          Base environment variables
         </label>
         <label>
-          <input type={'checkbox'} checked={syncModels.workspace}
-                 onChange={e => onModelsChanged({workspace: e.target.checked})}/>
-          Workspace information
+          <input type={'checkbox'} checked={syncModels.cookiesNotSecure}
+                 onChange={e => onModelsChanged({cookiesNotSecure: e.target.checked})}/>
+          Not secure cookies
         </label>
         <label>
-          <input type={'checkbox'} checked={syncModels.environment}
-                 onChange={e => onModelsChanged({environment: e.target.checked})}/>
-          Environment variables
+          <input type={'checkbox'} checked={syncModels.environmentCustom}
+                 onChange={e => onModelsChanged({environmentCustom: e.target.checked})}/>
+          Custom environment variables
+        </label>
+        <label>
+          <input type={'checkbox'} checked={syncModels.cookiesSecure}
+                 onChange={e => onModelsChanged({cookiesSecure: e.target.checked})}/>
+          Secure cookie values
         </label>
         <label>
           <input type={'checkbox'} checked={syncModels.request}
@@ -109,15 +107,15 @@ export const ConfigurationDialog: FC<ConfigurationDialogProps> = ({context}) => 
           Requests / Groups
         </label>
         <label>
-          <input type={'checkbox'} checked={syncModels.unit_test}
-                 onChange={e => onModelsChanged({unit_test: e.target.checked})}/>
+          <input type={'checkbox'} checked={syncModels.unitTest}
+                 onChange={e => onModelsChanged({unitTest: e.target.checked})}/>
           Unit tests
         </label>
-        <label>
-          <input type={'checkbox'} checked={syncModels.cookie_jar}
-                 onChange={e => onModelsChanged({cookie_jar: e.target.checked})}/>
-          Cookie values
-        </label>
+        {/*<label>
+          <input type={'checkbox'} checked={syncModels.apiSpec}
+                 onChange={e => onModelsChanged({apiSpec: e.target.checked})}/>
+          Api specification JSON
+        </label>*/}
       </div>
     </div>
   )
