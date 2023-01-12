@@ -43,12 +43,11 @@ export class ConfigurationService {
 }
 
 export const defaultModelsConfiguration = {
-  workspace: true,
-  request: true,
   apiSpec: true,
+  environmentBase: true,
+  environmentCustom: true,
+  request: true,
   unitTest: true,
-  environment_global: true,
-  environment_custom: true,
-  cookies_not_secure: true,
-  cookies_secure: false,
+  cookiesNotSecure: true,
+  cookiesSecure: false,
 } as SyncModels 

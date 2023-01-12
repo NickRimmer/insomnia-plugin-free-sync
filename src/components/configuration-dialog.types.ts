@@ -6,11 +6,10 @@ export type ConfigurationDialogProps = {
 
 export type SyncModels = {
   apiSpec: boolean,
-  workspace: boolean,
-  cookies_not_secure: boolean,
-  cookies_secure: boolean,
-  environment_global: boolean,
-  environment_custom: boolean,
+  cookiesNotSecure: boolean,
+  cookiesSecure: boolean,
+  environmentBase: boolean,
+  environmentCustom: boolean,
   request: boolean,
   unitTest: boolean,
 }
