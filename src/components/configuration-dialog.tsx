@@ -1,79 +1,80 @@
 ﻿import './configuration-dialog.styles.scss'
 import React, { FC, useEffect, useState } from 'react'
-import { ConfigurationDialogProps, SyncModels } from './configuration-dialog.types'
+import { ConfigurationDialogProps } from './configuration-dialog.types'
 import { validatePath } from '../services/file-service'
-import { ConfigurationService, defaultModelsConfiguration } from '../services/configuration-service'
+import { DataService } from '../services/data-service'
 import { Button } from './shared/button'
+import {
+  PluginConfiguration,
+  PluginConfigurationDefault,
+  PluginModelsConfiguration,
+} from '../services/configuration-service.types'
 
-export const ConfigurationDialog: FC<ConfigurationDialogProps> = ({context}) => {
-  const [pathInputValue, setPathInputValue] = useState<string | null | undefined>()
-  const [isAutoSaveEnabled, setIsAutoSaveEnabled] = useState(false)
+export const ConfigurationDialog: FC<ConfigurationDialogProps> = ({workspaceId, context}) => {
   const [isFilePathInputWrong, setIsFilePathInputWrong] = useState(true)
-  const [syncModels, setSyncModels] = useState<SyncModels>(defaultModelsConfiguration)
+  const [configuration, _setConfiguration] = useState<PluginConfiguration>(PluginConfigurationDefault)
 
-  const configurationService = new ConfigurationService(context.store)
-
+  const configurationService = new DataService(workspaceId, context.store)
   const validateFilePathInput = (path: string | null | undefined) => !path || validatePath(path)
 
+  // on mount
   useEffect(() => {
-    configurationService.getWorkspaceFilePathAsync().then((currentPath: string | null) => {
-      setPathInputValue(currentPath)
-      setIsFilePathInputWrong(validateFilePathInput(currentPath))
-    })
-
-    configurationService.getAutoSaveOptionAsync().then(setIsAutoSaveEnabled)
-    configurationService.getModelsAsync().then(v => {
-      setSyncModels(v)
+    configurationService.getConfigurationAsync().then(data => {
+      const result = data ?? PluginConfigurationDefault
+      _setConfiguration(result)
+      setIsFilePathInputWrong(validateFilePathInput(result.filePath))
     })
   }, [])
 
-  const savePath = (path: string) => {
-    setIsFilePathInputWrong(validateFilePathInput(path))
-    configurationService.setWorkspaceFilePathAsync(path)
+  // methods
+  const setConfigurationAsync = async (updates: Partial<PluginConfiguration>): Promise<void> => {
+    const result = {...configuration, ...updates}
+    await configurationService.setConfigurationAsync(result)
+    _setConfiguration(result)
   }
 
-  const onPathInputChange = (path: string) => {
+  const onPathInputChangeAsync = async (path: string) => {
+    await setConfigurationAsync({filePath: path})
     setIsFilePathInputWrong(validateFilePathInput(path))
-    setPathInputValue(path)
   }
 
-  const onSelectFileClicked = () => context.app.showSaveDialog().then((path: string | null) => {
+  const onSelectFileClickedAsync = async (): Promise<void> => {
+    let path = await context.app.showSaveDialog()
+
     if (!path) return
     if (!path?.toLocaleLowerCase().endsWith('.json')) path += '.json'
 
-    setPathInputValue(path)
-    savePath(path)
-  })
-
-  const onAutoSaveChanged = (checked: boolean) => {
-    setIsAutoSaveEnabled(checked)
-    configurationService.setAutoSaveOptionAsync(checked)
+    await onPathInputChangeAsync(path)
   }
 
-  const onModelsChanged = (prop: Partial<SyncModels>) => {
-    const result = {...syncModels, ...prop}
-    setSyncModels(result)
-    configurationService.setModelsAsync(result)
+  const onAutoSaveChangedAsync = (checked: boolean) => setConfigurationAsync({autoSave: checked})
+
+  const onModelsChangedAsync = (enabledModels: Partial<PluginModelsConfiguration>): Promise<void> => {
+    const result = {...configuration, enabledModels: {...configuration.enabledModels, ...enabledModels}}
+    return setConfigurationAsync(result)
   }
+
+  console.log(configuration)
 
   return (
     <div className='form-control form-control--outlined plugin-free-sync configuration-dialog'>
       <div>Configuration file path</div>
       <div>
         <input type={'text'} placeholder='Please, specify the path or select the file'
-               value={pathInputValue || ''}
-               onChange={e => onPathInputChange(e.target.value)}
-               onBlur={e => savePath(e.target.value)}/>
+               value={configuration.filePath || ''}
+               onChange={e => onPathInputChangeAsync(e.target.value)}/>
       </div>
+
       {!isFilePathInputWrong && (<div className={`error-message`}>Path value is incorrect</div>)}
+
       <div className='buttons'>
-        <Button icon='fa-file' onClick={onSelectFileClicked}>Select file...</Button>
+        <Button icon='fa-file' onClick={onSelectFileClickedAsync}>Select file...</Button>
         <label className='auto-save-checkbox'>
           Auto save on changes
           <input type={'checkbox'}
                  disabled={true}
-                 onChange={e => onAutoSaveChanged(e.target.checked)}
-                 checked={isAutoSaveEnabled}/>
+                 onChange={e => onAutoSaveChangedAsync(e.target.checked)}
+                 checked={configuration.autoSave}/>
         </label>
       </div>
 
@@ -82,33 +83,33 @@ export const ConfigurationDialog: FC<ConfigurationDialogProps> = ({context}) => 
       <h2 className='models-title'>Data to synchronize</h2>
       <div className='models-list'>
         <label>
-          <input type={'checkbox'} checked={syncModels.environmentBase}
-                 onChange={e => onModelsChanged({environmentBase: e.target.checked})}/>
+          <input type={'checkbox'} checked={configuration.enabledModels.environmentBase}
+                 onChange={e => onModelsChangedAsync({environmentBase: e.target.checked})}/>
           Base environment variables
         </label>
         <label>
-          <input type={'checkbox'} checked={syncModels.cookiesNotSecure}
-                 onChange={e => onModelsChanged({cookiesNotSecure: e.target.checked})}/>
+          <input type={'checkbox'} checked={configuration.enabledModels.cookiesNotSecure}
+                 onChange={e => onModelsChangedAsync({cookiesNotSecure: e.target.checked})}/>
           Not secure cookies
         </label>
         <label>
-          <input type={'checkbox'} checked={syncModels.environmentCustom}
-                 onChange={e => onModelsChanged({environmentCustom: e.target.checked})}/>
+          <input type={'checkbox'} checked={configuration.enabledModels.environmentCustom}
+                 onChange={e => onModelsChangedAsync({environmentCustom: e.target.checked})}/>
           Custom environment variables
         </label>
         <label>
-          <input type={'checkbox'} checked={syncModels.cookiesSecure}
-                 onChange={e => onModelsChanged({cookiesSecure: e.target.checked})}/>
+          <input type={'checkbox'} checked={configuration.enabledModels.cookiesSecure}
+                 onChange={e => onModelsChangedAsync({cookiesSecure: e.target.checked})}/>
           Secure cookie values
         </label>
         <label>
-          <input type={'checkbox'} checked={syncModels.request}
-                 onChange={e => onModelsChanged({request: e.target.checked})}/>
+          <input type={'checkbox'} checked={configuration.enabledModels.request}
+                 onChange={e => onModelsChangedAsync({request: e.target.checked})}/>
           Requests / Groups
         </label>
         <label>
-          <input type={'checkbox'} checked={syncModels.unitTest}
-                 onChange={e => onModelsChanged({unitTest: e.target.checked})}/>
+          <input type={'checkbox'} checked={configuration.enabledModels.unitTest}
+                 onChange={e => onModelsChangedAsync({unitTest: e.target.checked})}/>
           Unit tests
         </label>
         {/*<label>

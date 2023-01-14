@@ -1,5 +1,5 @@
 ﻿import { InsomniaContextData } from '../insomnia/types/context-data.types'
-import { ConfigurationService } from './configuration-service'
+import { DataService } from './data-service'
 import { InsomniaWorkspace } from '../insomnia/types/workspace.types'
 import { readFile, writeFile } from 'fs/promises'
 import { validatePath } from './file-service'
@@ -7,10 +7,10 @@ import { v4 as uuidv4 } from 'uuid'
 
 export class WorkspaceService {
   private readonly _data: InsomniaContextData
-  private readonly _configurationService: ConfigurationService
+  private readonly _configurationService: DataService
   private readonly _workspace: InsomniaWorkspace
 
-  constructor(data: InsomniaContextData, configurationService: ConfigurationService, workspace: InsomniaWorkspace) {
+  constructor(data: InsomniaContextData, configurationService: DataService, workspace: InsomniaWorkspace) {
     this._data = data
     this._configurationService = configurationService
     this._workspace = workspace
@@ -18,22 +18,22 @@ export class WorkspaceService {
 
   async exportAsync(): Promise<boolean> {
     // get path to save
-    const path = await this._configurationService.getWorkspaceFilePathAsync()
-    if (!validatePath(path)) return false
+    const configuration = await this._configurationService.getConfigurationAsync()
+    if (!validatePath(configuration.filePath)) return false
 
     // get collections in JSON string
     const dataJson = await this.getDataJsonAsync()
     if (!dataJson) return false
 
-    await writeFile(path!, dataJson, {encoding: 'utf8'})
+    await writeFile(configuration.filePath!, dataJson, {encoding: 'utf8'})
     return true
   }
 
   async importAsync(): Promise<boolean> {
-    const path = await this._configurationService.getWorkspaceFilePathAsync()
-    if (!validatePath(path)) return false
+    const configuration = await this._configurationService.getConfigurationAsync()
+    if (!validatePath(configuration.filePath)) return false
 
-    const dataJson = await readFile(path!, {encoding: 'utf8'})
+    const dataJson = await readFile(configuration.filePath!, {encoding: 'utf8'})
     if (!dataJson) return false
 
     let data = JSON.parse(dataJson)
@@ -109,7 +109,7 @@ export class WorkspaceService {
   }
 
   private async filterByModelSettingsAsync(data: any): Promise<any> {
-    const modelSettings = await this._configurationService.getModelsAsync()
+    const configuration = await this._configurationService.getConfigurationAsync()
     const current = JSON.parse(await this._data.export.insomnia({
       format: 'json',
       workspace: this._workspace,
@@ -125,22 +125,22 @@ export class WorkspaceService {
 
         switch (resource._type) {
           case 'api_spec':
-            return modelSettings.apiSpec ? resource : null
+            return configuration.enabledModels.apiSpec ? resource : null
 
           case 'request':
           case 'request_group':
-            return modelSettings.request ? resource : null
+            return configuration.enabledModels.request ? resource : null
 
           case 'unit_test':
           case 'unit_test_suite':
-            return modelSettings.unitTest ? resource : null
+            return configuration.enabledModels.unitTest ? resource : null
 
           case 'cookie_jar': {
             resource.cookies = resource
               .cookies
               .filter((cookie: any) =>
-                (!cookie.secure && modelSettings.cookiesNotSecure) ||
-                (cookie.secure && modelSettings.cookiesSecure),
+                (!cookie.secure && configuration.enabledModels.cookiesNotSecure) ||
+                (cookie.secure && configuration.enabledModels.cookiesSecure),
               )
 
             return resource.cookies.length > 0
@@ -152,8 +152,8 @@ export class WorkspaceService {
             const isBaseEnvironment = resource.parentId === importingWorkspaceData._id
             console.log(resource)
             return (
-              (modelSettings.environmentBase && isBaseEnvironment) ||
-              (modelSettings.environmentCustom && !isBaseEnvironment)
+              (configuration.enabledModels.environmentBase && isBaseEnvironment) ||
+              (configuration.enabledModels.environmentCustom && !isBaseEnvironment)
             ) ? resource
               : null
           }
@@ -167,8 +167,3 @@ export class WorkspaceService {
     return data
   }
 }
-
-/*
-if (resource._type === 'cookie_jar')
-  resource.cookies = resource.cookies.filter((cookie: any) => !cookie.secure)
-*/
