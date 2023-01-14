@@ -5,8 +5,6 @@ import { ConfigurationDialog } from './components/configuration-dialog'
 import { ConfigurationService } from './services/configuration-service'
 import { InsomniaContext } from './insomnia/types/context.types'
 import { WorkspaceService } from './services/workspace-service'
-import InsomniaData from './insomnia/data/data'
-import { pluginConstants } from './constants'
 
 const saveAction: InsomniaWorkspaceAction = {
   label: 'Free sync: Save workspace',
@@ -47,30 +45,22 @@ const readAction: InsomniaWorkspaceAction = {
 const configurationAction: InsomniaWorkspaceAction = {
   label: 'Free sync: Configuration',
   icon: 'fa-cog',
-  action: context => showDialogComponent({
+  action: (context, models) => showDialogComponent({
     context,
     title: 'Free sync: Configuration',
-    children: (<ConfigurationDialog context={context}/>),
+    children: (<ConfigurationDialog context={context} workspaceId={models.workspace._id}/>),
   }),
 }
 
 const experimentalAction: InsomniaWorkspaceAction = {
   label: 'Experimental function',
   icon: 'fa-vial',
-  action: async (context, models) => {
-    const workspacesData = new InsomniaData(pluginConstants.name)
-    const workspaceConfigData = await workspacesData.getWorkspaceConfigAsync(models.workspace._id)
-    console.log(workspaceConfigData)
-
-    await workspacesData.updateWorkspaceConfigAsync(models.workspace._id, {
-      'prop1': true,
-      'prop2': 'Hi',
-    })
+  action: () => {
   },
 }
 
 const WorkspaceServiceBuilder = (context: InsomniaContext, models: InsomniaWorkspaceActionModels) => {
-  const configurationService = new ConfigurationService(context.store)
+  const configurationService = new ConfigurationService(models.workspace._id)
   return new WorkspaceService(context.data, configurationService, models.workspace)
 }
 

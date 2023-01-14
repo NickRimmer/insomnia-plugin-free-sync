@@ -1,53 +1,27 @@
-﻿import { InsomniaContextStore } from '../insomnia/types/context-store.types'
-import { SyncModels } from '../components/configuration-dialog.types'
-
-const STORE_KEY_FILE_PATH = 'insomnia-plugin-free-sync-configuration-file-path'
-const STORE_KEY_AUTO_SAVE = 'insomnia-plugin-free-sync-configuration-auto-save'
-const STORE_KEY_MODELS = 'insomnia-plugin-free-sync-configuration-models'
+﻿import { PluginConfiguration, PluginConfigurationDefault } from './configuration-service.types'
+import { InsomniaContextStore } from '../insomnia/types/context-store.types'
 
 export class ConfigurationService {
-  private readonly _store: InsomniaContextStore
+  private readonly _workspaceId: string
+  private _store: InsomniaContextStore
 
-  constructor(store: InsomniaContextStore) {
+  constructor(workspaceId: string, store: InsomniaContextStore) {
+    this._workspaceId = workspaceId
     this._store = store
   }
 
-  getWorkspaceFilePathAsync(): Promise<string | null> {
-    return this._store.getItem(STORE_KEY_FILE_PATH)
+  private get _configurationStoreKey(): string {
+    return `plugin_free_sync_${this._workspaceId}_configuration`
   }
 
-  setWorkspaceFilePathAsync(path: string): Promise<void> {
-    return this._store.setItem(STORE_KEY_FILE_PATH, path)
+  public async getAsync(): Promise<PluginConfiguration> {
+    const value = await this._store.getItem(this._configurationStoreKey)
+    if (!value) return PluginConfigurationDefault
+
+    return JSON.parse(value) as PluginConfiguration
   }
 
-  async getAutoSaveOptionAsync(): Promise<boolean> {
-    const value = await this._store.getItem(STORE_KEY_AUTO_SAVE)
-    return value === String(true)
-  }
-
-  setAutoSaveOptionAsync(value: boolean): Promise<void> {
-    return this._store.setItem(STORE_KEY_AUTO_SAVE, String(value))
-  }
-
-  async getModelsAsync(): Promise<SyncModels> {
-    const jsonStr = await this._store.getItem(STORE_KEY_MODELS)
-
-    if (!jsonStr) return defaultModelsConfiguration
-    return {...defaultModelsConfiguration, ...JSON.parse(jsonStr)}
-  }
-
-  setModelsAsync(data: SyncModels): Promise<void> {
-    const jsonStr = JSON.stringify(data)
-    return this._store.setItem(STORE_KEY_MODELS, jsonStr)
+  public async setAsync(configuration: PluginConfiguration): Promise<void> {
+    return this._store.setItem(this._configurationStoreKey, JSON.stringify(configuration))
   }
 }
-
-export const defaultModelsConfiguration = {
-  apiSpec: true,
-  environmentBase: true,
-  environmentCustom: true,
-  request: true,
-  unitTest: true,
-  cookiesNotSecure: true,
-  cookiesSecure: false,
-} as SyncModels 

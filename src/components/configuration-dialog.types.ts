@@ -1,7 +1,8 @@
 ﻿import { InsomniaContext } from '../insomnia/types/context.types'
 
 export type ConfigurationDialogProps = {
-  context: InsomniaContext
+  context: InsomniaContext,
+  workspaceId: string,
 }
 
 export type SyncModels = {

@@ -3,7 +3,7 @@ import fsPath from 'path'
 import InsomniaDataModels from './data-models.enum'
 
 class InsomniaDataContext extends NeDB {
-  constructor(modelType: InsomniaDataModels) {
+  constructor(modelType: InsomniaDataModels | string) {
     const appPath = (window as any).app.getPath('userData') as string
     const dbPath = fsPath.join(appPath, `insomnia.${modelType}.db`)
 
@@ -46,6 +46,15 @@ class InsomniaDataContext extends NeDB {
 
   updateRecordAsync(id: string, updates: any): Promise<void> {
     return this.updateAsync({_id: id}, updates)
+  }
+
+  insertAsync(data: any): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.insert(data, (error) => {
+        if (error) reject(error)
+        else resolve()
+      })
+    })
   }
 }
 
