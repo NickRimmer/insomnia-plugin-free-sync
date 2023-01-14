@@ -1,5 +1,5 @@
 ﻿import { InsomniaContextData } from '../insomnia/types/context-data.types'
-import { ConfigurationService } from './configuration-service'
+import { DataService } from './data-service'
 import { InsomniaWorkspace } from '../insomnia/types/workspace.types'
 import { readFile, writeFile } from 'fs/promises'
 import { validatePath } from './file-service'
@@ -7,10 +7,10 @@ import { v4 as uuidv4 } from 'uuid'
 
 export class WorkspaceService {
   private readonly _data: InsomniaContextData
-  private readonly _configurationService: ConfigurationService
+  private readonly _configurationService: DataService
   private readonly _workspace: InsomniaWorkspace
 
-  constructor(data: InsomniaContextData, configurationService: ConfigurationService, workspace: InsomniaWorkspace) {
+  constructor(data: InsomniaContextData, configurationService: DataService, workspace: InsomniaWorkspace) {
     this._data = data
     this._configurationService = configurationService
     this._workspace = workspace
@@ -18,7 +18,7 @@ export class WorkspaceService {
 
   async exportAsync(): Promise<boolean> {
     // get path to save
-    const configuration = await this._configurationService.getAsync()
+    const configuration = await this._configurationService.getConfigurationAsync()
     if (!validatePath(configuration.filePath)) return false
 
     // get collections in JSON string
@@ -30,7 +30,7 @@ export class WorkspaceService {
   }
 
   async importAsync(): Promise<boolean> {
-    const configuration = await this._configurationService.getAsync()
+    const configuration = await this._configurationService.getConfigurationAsync()
     if (!validatePath(configuration.filePath)) return false
 
     const dataJson = await readFile(configuration.filePath!, {encoding: 'utf8'})
@@ -109,7 +109,7 @@ export class WorkspaceService {
   }
 
   private async filterByModelSettingsAsync(data: any): Promise<any> {
-    const configuration = await this._configurationService.getAsync()
+    const configuration = await this._configurationService.getConfigurationAsync()
     const current = JSON.parse(await this._data.export.insomnia({
       format: 'json',
       workspace: this._workspace,
@@ -167,8 +167,3 @@ export class WorkspaceService {
     return data
   }
 }
-
-/*
-if (resource._type === 'cookie_jar')
-  resource.cookies = resource.cookies.filter((cookie: any) => !cookie.secure)
-*/

@@ -2,7 +2,7 @@
 import React, { FC, useEffect, useState } from 'react'
 import { ConfigurationDialogProps } from './configuration-dialog.types'
 import { validatePath } from '../services/file-service'
-import { ConfigurationService } from '../services/configuration-service'
+import { DataService } from '../services/data-service'
 import { Button } from './shared/button'
 import {
   PluginConfiguration,
@@ -14,12 +14,12 @@ export const ConfigurationDialog: FC<ConfigurationDialogProps> = ({workspaceId, 
   const [isFilePathInputWrong, setIsFilePathInputWrong] = useState(true)
   const [configuration, _setConfiguration] = useState<PluginConfiguration>(PluginConfigurationDefault)
 
-  const configurationService = new ConfigurationService(workspaceId, context.store)
+  const configurationService = new DataService(workspaceId, context.store)
   const validateFilePathInput = (path: string | null | undefined) => !path || validatePath(path)
 
   // on mount
   useEffect(() => {
-    configurationService.getAsync().then(data => {
+    configurationService.getConfigurationAsync().then(data => {
       const result = data ?? PluginConfigurationDefault
       _setConfiguration(result)
       setIsFilePathInputWrong(validateFilePathInput(result.filePath))
@@ -29,7 +29,7 @@ export const ConfigurationDialog: FC<ConfigurationDialogProps> = ({workspaceId, 
   // methods
   const setConfigurationAsync = async (updates: Partial<PluginConfiguration>): Promise<void> => {
     const result = {...configuration, ...updates}
-    await configurationService.setAsync(result)
+    await configurationService.setConfigurationAsync(result)
     _setConfiguration(result)
   }
 
