@@ -6,8 +6,9 @@ import { configurationAction } from './configuration-action'
 const experimentalAction: InsomniaWorkspaceAction = {
   label: 'Experimental function',
   icon: 'fa-vial',
-  action: () => {
-    alert('Hello, Universe!')
+  action: (context, models) => {
+    console.log(context)
+    console.log(models)
   },
 }
 

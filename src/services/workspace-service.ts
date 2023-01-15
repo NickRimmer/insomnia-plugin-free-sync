@@ -4,14 +4,19 @@ import { InsomniaWorkspace } from '../insomnia/types/workspace.types'
 import { readFile, writeFile } from 'fs/promises'
 import { validatePath } from './file-service'
 import { v4 as uuidv4 } from 'uuid'
+import { WorkspaceResource } from '../insomnia/types/workspace-resource'
+import { WorkspaceRaw } from '../insomnia/types/workspace-raw'
 
 export class WorkspaceService {
-  private readonly _data: InsomniaContextData
+  private readonly _dataService: InsomniaContextData
   private readonly _configurationService: DataService
   private readonly _workspace: InsomniaWorkspace
 
-  constructor(data: InsomniaContextData, configurationService: DataService, workspace: InsomniaWorkspace) {
-    this._data = data
+  constructor(
+    dataService: InsomniaContextData,
+    configurationService: DataService,
+    workspace: InsomniaWorkspace) {
+    this._dataService = dataService
     this._configurationService = configurationService
     this._workspace = workspace
   }
@@ -36,20 +41,23 @@ export class WorkspaceService {
     const dataJson = await readFile(configuration.filePath!, {encoding: 'utf8'})
     if (!dataJson) return false
 
-    let data = JSON.parse(dataJson)
+    let data = JSON.parse(dataJson) as WorkspaceRaw
     data = await this.filterByModelSettingsAsync(data)
+    // await this._dataService.import.raw(JSON.stringify(data))
+    await this.importWithFixesAsync(data)
 
-    this.fixIds(data.resources, null, null)
-    this.replaceWorkspaceData(data.resources)
-    console.info(data.resources)
-
-    await this._data.import.raw(JSON.stringify(data))
-    // await this._data.import.raw(dataJson, {workspaceId: this._workspace._id})
     return true
   }
 
+  private async importWithFixesAsync(data: WorkspaceRaw): Promise<void> {
+    await this.fixIdsAsync(data.resources)
+    this.useCurrentWorkspaceData(data.resources)
+
+    await this._dataService.import.raw(JSON.stringify(data))
+  }
+
   private async getDataJsonAsync(): Promise<string | null> {
-    const dataJson = await this._data.export.insomnia({
+    const dataJson = await this._dataService.export.insomnia({
       includePrivate: false,
       format: 'json',
       workspace: this._workspace,
@@ -62,27 +70,24 @@ export class WorkspaceService {
     return JSON.stringify(data)
   }
 
-  private fixIds(data: any, oldParentId: string | null, newParentId: string | null): void {
-    const resources = oldParentId == null
-      ? data.filter((x: any) => x._type.toLowerCase() === 'workspace')
-      : data.filter((x: any) => x.parentId === oldParentId)
+  private async fixIdsAsync(resources: WorkspaceResource[]): Promise<void> {
+    for (const resource of resources) {
+      const oldId = resource._id
+      const newId = await this.getNewIdAsync(resource)
 
-    resources.forEach((x: any) => {
-      const oldId = x._id
-      const newId = x._type.toLowerCase() === 'workspace'
-        ? this._workspace._id
-        : `${x._type}_${uuidv4().replace(/-/g, '')}`
-
-      Object.assign(x, {
-        _id: newId,
-        parentId: newParentId,
-      })
-
-      this.fixIds(data, oldId, newId)
-    })
+      resource._id = newId
+      resources.filter(x => x.parentId === oldId).forEach(x => x.parentId = newId)
+    }
   }
 
-  private replaceWorkspaceData(resources: any) {
+  private async getNewIdAsync(resource: WorkspaceResource): Promise<string> {
+    // save current workspace id
+    if (resource._type.toLowerCase() === 'workspace') return this._workspace._id
+
+    return `${resource._type}_${uuidv4().replace(/-/g, '')}`
+  }
+
+  private useCurrentWorkspaceData(resources: any) {
     const workspaceData = resources.find((x: any) => x._type === 'workspace')
     Object.assign(workspaceData, {
       '_id': this._workspace._id,
@@ -110,19 +115,11 @@ export class WorkspaceService {
 
   private async filterByModelSettingsAsync(data: any): Promise<any> {
     const configuration = await this._configurationService.getConfigurationAsync()
-    const current = JSON.parse(await this._data.export.insomnia({
-      format: 'json',
-      workspace: this._workspace,
-      includePrivate: false,
-    }))
-    console.warn(current)
-
     const importingWorkspaceData = data.resources.find((x: any) => x._type === 'workspace')
+
     data.resources = data
       .resources
       .map((resource: any) => {
-        // const currentResource = current.resources.find((x: any) => x._type === resource._type) ?? null
-
         switch (resource._type) {
           case 'api_spec':
             return configuration.enabledModels.apiSpec ? resource : null
@@ -150,7 +147,6 @@ export class WorkspaceService {
 
           case 'environment': {
             const isBaseEnvironment = resource.parentId === importingWorkspaceData._id
-            console.log(resource)
             return (
               (configuration.enabledModels.environmentBase && isBaseEnvironment) ||
               (configuration.enabledModels.environmentCustom && !isBaseEnvironment)
