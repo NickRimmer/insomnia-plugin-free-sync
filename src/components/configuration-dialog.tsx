@@ -54,8 +54,6 @@ export const ConfigurationDialog: FC<ConfigurationDialogProps> = ({workspaceId, 
     return setConfigurationAsync(result)
   }
 
-  console.log(configuration)
-
   return (
     <div className='form-control form-control--outlined plugin-free-sync configuration-dialog'>
       <div>Configuration file path</div>
@@ -112,11 +110,11 @@ export const ConfigurationDialog: FC<ConfigurationDialogProps> = ({workspaceId, 
                  onChange={e => onModelsChangedAsync({unitTest: e.target.checked})}/>
           Unit tests
         </label>
-        {/*<label>
-          <input type={'checkbox'} checked={syncModels.apiSpec}
-                 onChange={e => onModelsChanged({apiSpec: e.target.checked})}/>
+        <label>
+          <input type={'checkbox'} checked={configuration.enabledModels.apiSpec}
+                 onChange={e => onModelsChangedAsync({apiSpec: e.target.checked})}/>
           Api specification JSON
-        </label>*/}
+        </label>
       </div>
     </div>
   )

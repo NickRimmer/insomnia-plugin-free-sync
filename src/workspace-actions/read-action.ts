@@ -15,9 +15,9 @@ export const readAction: InsomniaWorkspaceAction = {
         if (!result) context.app.alert('Operation canceled', 'Oops. Workspace cannot be read')
         else context.app.alert('Success', 'Workspace restored')
       })
-      .catch(error => {
+      .catch((error: Error) => {
         console.error(error)
-        context.app.alert('Operation failed', 'Sorry, workspace cannot be read')
+        context.app.alert('Operation failed', error.message)
       })
   },
 }

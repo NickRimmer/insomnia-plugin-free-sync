@@ -3,26 +3,27 @@ import { DataService } from './data-service'
 import { InsomniaWorkspace } from '../insomnia/types/workspace.types'
 import { readFile, writeFile } from 'fs/promises'
 import { validatePath } from './file-service'
-import { v4 as uuidv4 } from 'uuid'
+import { WorkspaceRaw } from '../insomnia/types/workspace-raw'
 
 export class WorkspaceService {
-  private readonly _data: InsomniaContextData
+  private readonly _dataService: InsomniaContextData
   private readonly _configurationService: DataService
   private readonly _workspace: InsomniaWorkspace
 
-  constructor(data: InsomniaContextData, configurationService: DataService, workspace: InsomniaWorkspace) {
-    this._data = data
+  constructor(
+    dataService: InsomniaContextData,
+    configurationService: DataService,
+    workspace: InsomniaWorkspace) {
+    this._dataService = dataService
     this._configurationService = configurationService
     this._workspace = workspace
   }
 
   async exportAsync(): Promise<boolean> {
-    // get path to save
     const configuration = await this._configurationService.getConfigurationAsync()
     if (!validatePath(configuration.filePath)) return false
 
-    // get collections in JSON string
-    const dataJson = await this.getDataJsonAsync()
+    const dataJson = await this.getExportDataJsonAsync()
     if (!dataJson) return false
 
     await writeFile(configuration.filePath!, dataJson, {encoding: 'utf8'})
@@ -30,26 +31,29 @@ export class WorkspaceService {
   }
 
   async importAsync(): Promise<boolean> {
-    const configuration = await this._configurationService.getConfigurationAsync()
-    if (!validatePath(configuration.filePath)) return false
+    const data = await this.getImportDataJsonAsync()
+    if (!data) return false
 
-    const dataJson = await readFile(configuration.filePath!, {encoding: 'utf8'})
-    if (!dataJson) return false
+    const dataWorkspace = data.resources.find(x => x._type.toLowerCase() === 'workspace')
+    if (!dataWorkspace) throw new Error('Workspace not found in imported file content')
+    if (dataWorkspace._id !== this._workspace._id) throw new Error('You are trying to load data of different workspace')
 
-    let data = JSON.parse(dataJson)
-    data = await this.filterByModelSettingsAsync(data)
-
-    this.fixIds(data.resources, null, null)
-    this.replaceWorkspaceData(data.resources)
-    console.info(data.resources)
-
-    await this._data.import.raw(JSON.stringify(data))
-    // await this._data.import.raw(dataJson, {workspaceId: this._workspace._id})
+    await this._dataService.import.raw(JSON.stringify(data))
     return true
   }
 
-  private async getDataJsonAsync(): Promise<string | null> {
-    const dataJson = await this._data.export.insomnia({
+  private async getImportDataJsonAsync(): Promise<WorkspaceRaw | null> {
+    const configuration = await this._configurationService.getConfigurationAsync()
+    if (!validatePath(configuration.filePath)) return null
+
+    const dataJson = await readFile(configuration.filePath!, {encoding: 'utf8'})
+    if (!dataJson) return null
+
+    return JSON.parse(dataJson) as WorkspaceRaw
+  }
+
+  private async getExportDataJsonAsync(): Promise<string | null> {
+    const dataJson = await this._dataService.export.insomnia({
       includePrivate: false,
       format: 'json',
       workspace: this._workspace,
@@ -58,42 +62,8 @@ export class WorkspaceService {
 
     let data = JSON.parse(dataJson)
     data = this.reduceChangesNoise(data)
-    // data = await this.filterByModelSettingsAsync(data)
+    data = await this.filterByModelSettingsAsync(data)
     return JSON.stringify(data)
-  }
-
-  private fixIds(data: any, oldParentId: string | null, newParentId: string | null): void {
-    const resources = oldParentId == null
-      ? data.filter((x: any) => x._type.toLowerCase() === 'workspace')
-      : data.filter((x: any) => x.parentId === oldParentId)
-
-    resources.forEach((x: any) => {
-      const oldId = x._id
-      const newId = x._type.toLowerCase() === 'workspace'
-        ? this._workspace._id
-        : `${x._type}_${uuidv4().replace(/-/g, '')}`
-
-      Object.assign(x, {
-        _id: newId,
-        parentId: newParentId,
-      })
-
-      this.fixIds(data, oldId, newId)
-    })
-  }
-
-  private replaceWorkspaceData(resources: any) {
-    const workspaceData = resources.find((x: any) => x._type === 'workspace')
-    Object.assign(workspaceData, {
-      '_id': this._workspace._id,
-      'parentId': this._workspace.parentId,
-      'modified': this._workspace.modified,
-      'created': this._workspace.created,
-      'description': this._workspace.description,
-      'name': this._workspace.name,
-      'scope': this._workspace.scope,
-      '_type': 'workspace',
-    })
   }
 
   private reduceChangesNoise(data: any): any {
@@ -110,20 +80,15 @@ export class WorkspaceService {
 
   private async filterByModelSettingsAsync(data: any): Promise<any> {
     const configuration = await this._configurationService.getConfigurationAsync()
-    const current = JSON.parse(await this._data.export.insomnia({
-      format: 'json',
-      workspace: this._workspace,
-      includePrivate: false,
-    }))
-    console.warn(current)
-
     const importingWorkspaceData = data.resources.find((x: any) => x._type === 'workspace')
+
     data.resources = data
       .resources
       .map((resource: any) => {
-        // const currentResource = current.resources.find((x: any) => x._type === resource._type) ?? null
+        switch (resource._type.toLowerCase()) {
+          case 'workspace':
+            return resource
 
-        switch (resource._type) {
           case 'api_spec':
             return configuration.enabledModels.apiSpec ? resource : null
 
@@ -150,7 +115,6 @@ export class WorkspaceService {
 
           case 'environment': {
             const isBaseEnvironment = resource.parentId === importingWorkspaceData._id
-            console.log(resource)
             return (
               (configuration.enabledModels.environmentBase && isBaseEnvironment) ||
               (configuration.enabledModels.environmentCustom && !isBaseEnvironment)
@@ -159,6 +123,7 @@ export class WorkspaceService {
           }
 
           default:
+            console.warn(`Found unknown resource '${resource._type}' on import`)
             return resource
         }
       })
