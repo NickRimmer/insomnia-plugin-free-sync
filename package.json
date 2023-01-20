@@ -18,8 +18,8 @@
     "build": "esr esbuild.ts",
     "clean": "rimraf dist",
     "watch": "npm-watch build",
-    "publish": "node scripts/npm-publish.js && copyfiles -u 1 ./npm_content/* ./dist/ && cd dist && npm publish",
-    "publish-dry": "node scripts/npm-publish.js && copyfiles -u 1 ./npm_content/* ./dist/ && cd dist && npm publish --dry-run"
+    "publish": "node npm/generate-package.js && copyfiles -u 2 ./npm/content/* ./dist/ && cd dist && npm publish",
+    "publish-dry": "node npm/generate-package.js && copyfiles -u 2 ./npm/content/* ./dist/ && cd dist && npm publish --dry-run"
   },
   "insomnia": {
     "name": "free-sync",
