@@ -1,51 +1,58 @@
 ﻿'use strict'
 
-const fs = require('fs')
-const {execSync} = require('child_process')
+async function executeAsync() {
+  const fs = require('fs')
+  const request = require('request')
+  const semver = require('semver')
 
-// build a new clear package.json for NPM + Insomnia
-const dataJson = fs.readFileSync('package.json').toString()
-const dataObj = JSON.parse(dataJson)
+  // build a new clear package.json for NPM + Insomnia
+  const dataJson = fs.readFileSync('package.json').toString()
+  const dataObj = JSON.parse(dataJson)
 
-// versions auto builder
-const buildVersion = (configuredVersion) => {
-  const deployedVersionJson = execSync('npm show insomnia-plugin-free-sync versions --json').toString()
-  const deployedVersion = JSON.parse(deployedVersionJson).slice(-1)[0]
+  // read version from remote
+  const getCurrentVersionAsync = async () => new Promise((resolve, reject) => {
+    request('https://registry.npmjs.org/-/package/insomnia-plugin-free-sync/dist-tags', {
+      json: true,
+    }, (error, res, body) => {
+      if (error || res.statusCode !== 200) reject()
+      resolve(body.latest)
+    })
+  })
 
-  console.info(`Configured version: ${configuredVersion}`)
-  console.info(`Deployed version: ${deployedVersion}`)
+  // versions auto builder
+  const buildVersionAsync = async (configuredVersion) => {
+    const deployedVersion = await getCurrentVersionAsync()
 
-  const configuredVersionParts = configuredVersion.split('.')
-  const deployedVersionParts = deployedVersion.split('.')
+    console.info(`Configured version: ${configuredVersion}`)
+    console.info(`Deployed version: ${deployedVersion}`)
 
-  // if new major or minor
-  if (configuredVersionParts[0] !== deployedVersionParts[0] ||
-    configuredVersionParts[1] !== deployedVersionParts[1]) {
-    console.info(`New major/minor version set from configuration: ${configuredVersion}`)
-    return configuredVersion
+    if (semver.gt(configuredVersion, deployedVersion)) {
+      console.warn('Will be used configured version as it is greater then deployed')
+      return configuredVersion
+    }
+
+    const incrementedVersion = semver.inc(deployedVersion, 'patch')
+    console.info(`New version generated: ${incrementedVersion}`)
+    return incrementedVersion
   }
 
-  const generated = (parseInt(deployedVersionParts[2]) + 1).toString()
+  const version = await buildVersionAsync(dataObj.version)
+  const resultObj = {
+    name: dataObj.name,
+    version: version,
+    main: 'index.js',
+    author: dataObj.author,
+    license: dataObj.license,
+    repository: dataObj.repository,
+    bugs: dataObj.bugs,
+    insomnia: dataObj.insomnia,
+  }
 
-  const result = `${deployedVersionParts[0]}.${deployedVersionParts[1]}.${generated}`
-  console.log(`Auto version created: ${result}`)
+  const resultJson = JSON.stringify(resultObj, null, 2)
+  fs.writeFileSync('dist/package.json', resultJson)
 
-  return result
+  // create README.md for NPM repo
+  fs.createReadStream('README-NPM.md').pipe(fs.createWriteStream('dist/README.md'))
 }
 
-const resultObj = {
-  name: dataObj.name,
-  version: buildVersion(dataObj.version),
-  main: 'index.js',
-  author: dataObj.author,
-  license: dataObj.license,
-  repository: dataObj.repository,
-  bugs: dataObj.bugs,
-  insomnia: dataObj.insomnia,
-}
-
-const resultJson = JSON.stringify(resultObj, null, 2)
-fs.writeFileSync('dist/package.json', resultJson)
-
-// create README.md for NPM repo
-fs.createReadStream('README-NPM.md').pipe(fs.createWriteStream('dist/README.md'))
+executeAsync()
