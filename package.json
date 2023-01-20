@@ -23,9 +23,9 @@
   },
   "insomnia": {
     "name": "free-sync",
-    "displayName": "Free sync",
-    "description": "Allow to read/write workspace settings to a file",
-    "unlisted": true,
+    "displayName": "Free sync: easy-peasy",
+    "description": "Plugin allows to read/write workspace settings to a file",
+    "unlisted": false,
     "images": {
       "icon": "free-sync-icon-boxed.svg"
     },
