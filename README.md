@@ -1,8 +1,6 @@
-﻿# Free sync - plugin for [Insomnia](https://insomnia.rest/)
+﻿# <img src="npm/content/free-sync-icon-boxed.svg" alt="icon" width="35" height="35" /> Free sync - plugin for [Insomnia](https://insomnia.rest/)
 
 If you like this plugin, [leave it a :star: on Github!](https://github.com/NickRimmer/insomnia-plugin-free-sync)
-
-![](npm/content/free-sync-icon-boxed.svg | width=100)
 
 ## Overview
 
