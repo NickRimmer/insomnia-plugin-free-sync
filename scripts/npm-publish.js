@@ -50,9 +50,6 @@ async function executeAsync() {
 
   const resultJson = JSON.stringify(resultObj, null, 2)
   fs.writeFileSync('dist/package.json', resultJson)
-
-  // create README.md for NPM repo
-  fs.createReadStream('README-NPM.md').pipe(fs.createWriteStream('dist/README.md'))
 }
 
 executeAsync()
