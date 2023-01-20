@@ -18,13 +18,21 @@
     "build": "esr esbuild.ts",
     "clean": "rimraf dist",
     "watch": "npm-watch build",
-    "publish": "node scripts/npm-publish.js && cd dist && npm publish",
-    "publish-dry": "node scripts/npm-publish.js && cd dist && npm publish --dry-run"
+    "publish": "node scripts/npm-publish.js && copyfiles -u 1 ./npm_content/* ./dist/ && cd dist && npm publish",
+    "publish-dry": "node scripts/npm-publish.js && copyfiles -u 1 ./npm_content/* ./dist/ && cd dist && npm publish --dry-run"
   },
   "insomnia": {
     "name": "free-sync",
-    "description": "Workspace synchronization via a file",
-    "unlisted": true
+    "displayName": "Free sync",
+    "description": "Allow to read/write workspace settings to a file",
+    "unlisted": true,
+    "images": {
+      "icon": "free-sync-icon-boxed.svg"
+    },
+    "publisher": {
+      "name": "Nick Rimmer",
+      "icon": "https://www.gravatar.com/avatar/53a530a44db8d365a66bcdef9d49e23c"
+    }
   },
   "watch": {
     "build": {
@@ -40,6 +48,7 @@
     "@types/react": "^16.14.5",
     "@types/react-dom": "^16.9.12",
     "@types/uuid": "^9.0.0",
+    "copyfiles": "^2.4.1",
     "electron": "22.0.0",
     "esbuild": "^0.14.29",
     "esbuild-runner": "^2.2.1",
