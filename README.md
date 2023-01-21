@@ -17,7 +17,7 @@ You can find the plugin at this [link](https://insomnia.rest/plugins/insomnia-pl
 
 - Install the plugin from the [Insomnia plugin Hub](https://insomnia.rest/plugins/insomnia-plugin-free-sync).
 - Open workspace menu and select `Free sync: Configuration`
-- When file path is configured, workspace can be synchronized with `Save workspace` / `Load workspace` workspace options
+- When file path is configured, workspace can be synchronized with `Save workspace` / `Load workspace` options
 
 ![npm/content/readme-workspace-actions.jpg](npm/content/readme-workspace-actions.jpg)
 
