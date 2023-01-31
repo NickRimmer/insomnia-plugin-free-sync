@@ -46,6 +46,7 @@ async function executeAsync() {
     repository: dataObj.repository,
     bugs: dataObj.bugs,
     insomnia: dataObj.insomnia,
+    dependencies: dataObj.dependencies,
   }
 
   const resultJson = JSON.stringify(resultObj, null, 2)
