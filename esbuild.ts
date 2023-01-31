@@ -8,7 +8,6 @@ build({
   external: [
     'react',
     'react-dom',
-    'electron',
     'uuid',
     'nedb',
   ],
