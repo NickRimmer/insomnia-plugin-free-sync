@@ -63,7 +63,7 @@ export class WorkspaceService {
     let data = JSON.parse(dataJson)
     data = this.reduceChangesNoise(data)
     data = await this.filterByModelSettingsAsync(data)
-    return JSON.stringify(data)
+    return JSON.stringify(data, null, 2)
   }
 
   private reduceChangesNoise(data: any): any {
