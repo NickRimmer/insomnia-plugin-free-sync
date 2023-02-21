@@ -2,6 +2,7 @@
   filePath: string,
   autoSave: boolean,
   enabledModels: PluginModelsConfiguration
+  SaveAndLoadAsMultipleFiles: boolean
 }
 
 export type PluginModelsConfiguration = {
@@ -17,6 +18,7 @@ export type PluginModelsConfiguration = {
 export const PluginConfigurationDefault: PluginConfiguration = {
   filePath: '',
   autoSave: false,
+  SaveAndLoadAsMultipleFiles: false,
   enabledModels: {
     apiSpec: true,
     environmentBase: true,

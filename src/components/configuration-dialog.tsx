@@ -48,6 +48,9 @@ export const ConfigurationDialog: FC<ConfigurationDialogProps> = ({workspaceId, 
   }
 
   const onAutoSaveChangedAsync = (checked: boolean) => setConfigurationAsync({autoSave: checked})
+  const onSaveAndLoadAsMultipleFilesChangedAsync = (checked: boolean) => {
+    setConfigurationAsync({SaveAndLoadAsMultipleFiles: checked})
+  }
 
   const onModelsChangedAsync = (enabledModels: Partial<PluginModelsConfiguration>): Promise<void> => {
     const result = {...configuration, enabledModels: {...configuration.enabledModels, ...enabledModels}}
@@ -67,12 +70,18 @@ export const ConfigurationDialog: FC<ConfigurationDialogProps> = ({workspaceId, 
 
       <div className='buttons'>
         <Button icon='fa-file' onClick={onSelectFileClickedAsync}>Select file...</Button>
-        <label className='auto-save-checkbox'>
-          Auto save on changes
+        <label className='checkbox'>
+          <input type={'checkbox'}
+                 onChange={e => onSaveAndLoadAsMultipleFilesChangedAsync(e.target.checked)}
+                 checked={configuration.SaveAndLoadAsMultipleFiles}/>
+          Save/Load as multiple files
+        </label>
+        <label className='checkbox'>
           <input type={'checkbox'}
                  disabled={true}
                  onChange={e => onAutoSaveChangedAsync(e.target.checked)}
                  checked={configuration.autoSave}/>
+          Auto save on changes
         </label>
       </div>
 
