@@ -16,6 +16,15 @@ You can find the plugin at this [link](https://insomnia.rest/plugins/insomnia-pl
 ### How to use it
 
 - Install the plugin from the [Insomnia plugin Hub](https://insomnia.rest/plugins/insomnia-plugin-free-sync).
+
+### Initialization
+- Create a new project from within insomnia
+- Configure the project as needed
+- Open workspace menu and select `Free sync: Configuration`
+- When file path is configured, workspace can be synchronized with `Save workspace` / `Load workspace` options
+
+### Import
+- Import the previously exported workspace json file as new project
 - Open workspace menu and select `Free sync: Configuration`
 - When file path is configured, workspace can be synchronized with `Save workspace` / `Load workspace` options
 
