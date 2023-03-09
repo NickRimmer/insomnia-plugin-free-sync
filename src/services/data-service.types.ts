@@ -1,8 +1,8 @@
 ﻿export type PluginConfiguration = {
   filePath: string,
   autoSave: boolean,
+  saveAsSingleFile: boolean,
   enabledModels: PluginModelsConfiguration
-  SaveAndLoadAsMultipleFiles: boolean //TODO remove it and identify automatically
 }
 
 export type PluginModelsConfiguration = {
@@ -18,7 +18,7 @@ export type PluginModelsConfiguration = {
 export const PluginConfigurationDefault: PluginConfiguration = {
   filePath: '',
   autoSave: false,
-  SaveAndLoadAsMultipleFiles: false,
+  saveAsSingleFile: false,
   enabledModels: {
     apiSpec: true,
     environmentBase: true,

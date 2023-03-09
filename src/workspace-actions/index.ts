@@ -6,9 +6,15 @@ import { configurationAction } from './configuration-action'
 // const experimentalAction: InsomniaWorkspaceAction = {
 //   label: 'Experimental function',
 //   icon: 'fa-vial',
-//   action: (context, models) => {
-//     console.log(context)
-//     console.log(models)
+//   action: async (context, models) => {
+//     const {canceled, filePaths} = await (window as any).dialog.showOpenDialog({
+//       title: 'Workspace folder',
+//       buttonLabel: 'Select folder',
+//       properties: ['openDirectory'],
+//     })
+//
+//     console.log(canceled)
+//     console.log(filePaths)
 //   },
 // }
 

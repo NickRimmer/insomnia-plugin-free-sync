@@ -22,3 +22,24 @@ export const showDialogComponent = ({context, title, children}: showDialogCompon
     },
   })
 }
+
+export const showDialogSelectDirectoryAsync = async (title: string): Promise<string | null> => {
+  const {canceled, filePaths} = await (window as any).dialog.showOpenDialog({
+    title,
+    buttonLabel: 'Select directory',
+    properties: ['openDirectory'],
+  })
+
+  if (canceled || !filePaths) return null
+
+  return filePaths[0]
+}
+
+export const showDialogSelectFileAsync = async (ext: string): Promise<string | null> => {
+  const {canceled, filePath} = await (window as any).dialog.showSaveDialog()
+
+  if (canceled || !filePath) return null
+
+  if (filePath.endsWith(`.${ext}`)) return filePath
+  return `${filePath}.${ext}`
+}

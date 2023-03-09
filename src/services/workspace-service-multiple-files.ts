@@ -1,7 +1,7 @@
 ﻿import { WorkspaceServiceBase } from './workspace-service-base'
 import { WorkspaceRaw } from '../insomnia/types/workspace-raw.types'
 import path from 'path'
-import { exists, validatePath } from './file-service'
+import { exists, isValidPath } from './file-service'
 import { mkdir, readFile, rm, writeFile } from 'fs/promises'
 import { promises } from 'fs'
 
@@ -10,7 +10,7 @@ export class WorkspaceServiceMultipleFiles extends WorkspaceServiceBase {
 
   protected async loadDataAsync(): Promise<WorkspaceRaw | null> {
     const configuration = await this._dataService.getConfigurationAsync()
-    if (!validatePath(configuration.filePath)) return null
+    if (!isValidPath(configuration.filePath, false)) return null
 
     const metaDataJson = await readFile(path.join(configuration.filePath!), {encoding: 'utf8'})
     if (!metaDataJson) return null
@@ -39,7 +39,7 @@ export class WorkspaceServiceMultipleFiles extends WorkspaceServiceBase {
 
   protected async saveDataAsync(data: WorkspaceRaw): Promise<boolean> {
     const configuration = await this._dataService.getConfigurationAsync()
-    if (!validatePath(configuration.filePath)) return false
+    if (!isValidPath(configuration.filePath, false)) return false
 
     const multipleFileSubFolder = path.join(configuration.filePath!, this.multipleFileSubfolderRelativePath)
 

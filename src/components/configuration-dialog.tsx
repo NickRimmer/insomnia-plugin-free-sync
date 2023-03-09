@@ -1,21 +1,24 @@
 ﻿import './configuration-dialog.styles.scss'
 import React, { FC, useEffect, useState } from 'react'
 import { ConfigurationDialogProps } from './configuration-dialog.types'
-import { validatePath } from '../services/file-service'
+import { isValidPath } from '../services/file-service'
 import { DataService } from '../services/data-service'
 import { Button } from './shared/button'
 import {
   PluginConfiguration,
   PluginConfigurationDefault,
   PluginModelsConfiguration,
-} from '../services/configuration-service.types'
+} from '../services/data-service.types'
+import { showDialogSelectDirectoryAsync, showDialogSelectFileAsync } from '../insomnia/tools/dialogs'
 
 export const ConfigurationDialog: FC<ConfigurationDialogProps> = ({workspaceId, context}) => {
   const [isFilePathInputWrong, setIsFilePathInputWrong] = useState(true)
   const [configuration, _setConfiguration] = useState<PluginConfiguration>(PluginConfigurationDefault)
 
   const configurationService = new DataService(workspaceId, context.store)
-  const validateFilePathInput = (path: string | null | undefined) => !path || validatePath(path)
+  const validateFilePathInput =
+    (path: string | null | undefined) => !path ||
+      isValidPath(path, configuration.saveAsSingleFile)
 
   // on mount
   useEffect(() => {
@@ -25,6 +28,10 @@ export const ConfigurationDialog: FC<ConfigurationDialogProps> = ({workspaceId, 
       setIsFilePathInputWrong(validateFilePathInput(result.filePath))
     })
   }, [])
+
+  useEffect(() => {
+    setIsFilePathInputWrong(validateFilePathInput(configuration.filePath))
+  }, [configuration])
 
   // methods
   const setConfigurationAsync = async (updates: Partial<PluginConfiguration>): Promise<void> => {
@@ -39,17 +46,17 @@ export const ConfigurationDialog: FC<ConfigurationDialogProps> = ({workspaceId, 
   }
 
   const onSelectFileClickedAsync = async (): Promise<void> => {
-    let path = await context.app.showSaveDialog()
+    const path = configuration.saveAsSingleFile
+      ? await showDialogSelectFileAsync('json')
+      : await showDialogSelectDirectoryAsync('Workspace directory')
 
     if (!path) return
-    if (!path?.toLocaleLowerCase().endsWith('.json')) path += '.json'
-
     await onPathInputChangeAsync(path)
   }
 
   const onAutoSaveChangedAsync = (checked: boolean) => setConfigurationAsync({autoSave: checked})
-  const onSaveAndLoadAsMultipleFilesChangedAsync = (checked: boolean) => {
-    setConfigurationAsync({SaveAndLoadAsMultipleFiles: checked})
+  const onSaveAsSingleFileChangedAsync = async (checked: boolean): Promise<void> => {
+    await setConfigurationAsync({saveAsSingleFile: checked})
   }
 
   const onModelsChangedAsync = (enabledModels: Partial<PluginModelsConfiguration>): Promise<void> => {
@@ -59,30 +66,38 @@ export const ConfigurationDialog: FC<ConfigurationDialogProps> = ({workspaceId, 
 
   return (
     <div className='form-control form-control--outlined plugin-free-sync configuration-dialog'>
-      <div>Configuration file path</div>
+      <div className={'input-label-with-error'}>
+        <div>Configuration file path</div>
+        {!isFilePathInputWrong && (<div className={`error-message`}>Path value is incorrect</div>)}
+      </div>
+
+
       <div>
-        <input type={'text'} placeholder='Please, specify the path or select the file'
+        <input type={'text'} placeholder='Please, specify the path'
                value={configuration.filePath || ''}
                onChange={e => onPathInputChangeAsync(e.target.value)}/>
       </div>
 
-      {!isFilePathInputWrong && (<div className={`error-message`}>Path value is incorrect</div>)}
-
       <div className='buttons'>
-        <Button icon='fa-file' onClick={onSelectFileClickedAsync}>Select file...</Button>
-        <label className='checkbox'>
-          <input type={'checkbox'}
-                 onChange={e => onSaveAndLoadAsMultipleFilesChangedAsync(e.target.checked)}
-                 checked={configuration.SaveAndLoadAsMultipleFiles}/>
-          Save/Load as multiple files
-        </label>
-        <label className='checkbox'>
-          <input type={'checkbox'}
-                 disabled={true}
-                 onChange={e => onAutoSaveChangedAsync(e.target.checked)}
-                 checked={configuration.autoSave}/>
-          Auto save on changes
-        </label>
+        <Button icon='fa-file'
+                onClick={onSelectFileClickedAsync}>{configuration.saveAsSingleFile ? 'Select file...' : 'Select directory...'}</Button>
+
+        <div className='checkboxes'>
+          <label className='checkbox'>
+            <input type={'checkbox'}
+                   onChange={e => onSaveAsSingleFileChangedAsync(e.target.checked)}
+                   checked={configuration.saveAsSingleFile}/>
+            As a single file
+          </label>
+
+          <label className='checkbox'>
+            <input type={'checkbox'}
+                   disabled={true}
+                   onChange={e => onAutoSaveChangedAsync(e.target.checked)}
+                   checked={configuration.autoSave}/>
+            Auto save on changes
+          </label>
+        </div>
       </div>
 
       <hr className='pad-top'/>
