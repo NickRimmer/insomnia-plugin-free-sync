@@ -2,7 +2,7 @@
   filePath: string,
   autoSave: boolean,
   enabledModels: PluginModelsConfiguration
-  SaveAndLoadAsMultipleFiles: boolean
+  SaveAndLoadAsMultipleFiles: boolean //TODO remove it and identify automatically
 }
 
 export type PluginModelsConfiguration = {

@@ -1,23 +1,32 @@
-﻿import { InsomniaWorkspaceAction } from '../insomnia/types/workspace-action.types'
-import { WorkspaceService } from '../services/workspace-service'
+﻿import { InsomniaWorkspaceAction, InsomniaWorkspaceActionModels } from '../insomnia/types/workspace-action.types'
+import {
+  WorkspaceServiceBase,
+  WorkspaceServiceMultipleFiles,
+  WorkspaceServiceSingleFile,
+} from '../services/workspace-service'
 import { DataService } from '../services/data-service'
+import { InsomniaContext } from '../insomnia/types/context.types'
 
 export const readAction: InsomniaWorkspaceAction = {
   label: 'Free sync: Load workspace',
   icon: 'fa-download',
-  action: (context, models) => {
-    const configurationService = new DataService(models.workspace._id, context.store)
-    const workspaceService = new WorkspaceService(context.data, configurationService, models.workspace)
+  action: (context, models) => actionAsync(context, models),
+}
 
-    workspaceService
-      .importAsync()
-      .then(result => {
-        if (!result) context.app.alert('Operation canceled', 'Oops. Workspace cannot be read')
-        else context.app.alert('Success', 'Workspace restored')
-      })
-      .catch((error: Error) => {
-        console.error(error)
-        context.app.alert('Operation failed', error.message)
-      })
-  },
+const actionAsync = async (context: InsomniaContext, models: InsomniaWorkspaceActionModels): Promise<void> => {
+  const dataService = new DataService(models.workspace._id, context.store)
+  const configuration = await dataService.getConfigurationAsync()
+  const workspaceService: WorkspaceServiceBase = configuration.SaveAndLoadAsMultipleFiles
+    ? new WorkspaceServiceMultipleFiles(dataService, context.data, models.workspace)
+    : new WorkspaceServiceSingleFile(dataService, context.data, models.workspace)
+
+  try {
+    const result = await workspaceService.importAsync()
+
+    if (!result) context.app.alert('Operation canceled', 'Oops. Workspace cannot be read')
+    else context.app.alert('Success', 'Workspace restored')
+  } catch (error: any) {
+    console.error(error)
+    context.app.alert('Operation failed', error.message)
+  }
 }
