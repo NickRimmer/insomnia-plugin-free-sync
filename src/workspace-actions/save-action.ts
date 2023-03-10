@@ -9,7 +9,7 @@ import { InsomniaContext } from '../insomnia/types/context.types'
 
 export const saveAction: InsomniaWorkspaceAction = {
   label: 'Free sync: Save workspace',
-  icon: 'fa-upload',
+  icon: 'upload',
   action: (context, models) => actionAsync(context, models),
 }
 

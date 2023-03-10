@@ -9,7 +9,7 @@ import { InsomniaContext } from '../insomnia/types/context.types'
 
 export const readAction: InsomniaWorkspaceAction = {
   label: 'Free sync: Load workspace',
-  icon: 'fa-download',
+  icon: 'download',
   action: (context, models) => actionAsync(context, models),
 }
 

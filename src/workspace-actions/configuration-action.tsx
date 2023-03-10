@@ -5,7 +5,7 @@ import { InsomniaWorkspaceAction } from '../insomnia/types/workspace-action.type
 
 export const configurationAction: InsomniaWorkspaceAction = {
   label: 'Free sync: Configuration',
-  icon: 'fa-cog',
+  icon: 'gear',
   action: (context, models) => showDialogComponent({
     context,
     title: 'Free sync: Configuration',
