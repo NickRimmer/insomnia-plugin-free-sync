@@ -1,4 +1,4 @@
-﻿import { PluginConfiguration, PluginConfigurationDefault } from './configuration-service.types'
+﻿import { PluginConfiguration, PluginConfigurationDefault } from './data-service.types'
 import { InsomniaContextStore } from '../insomnia/types/context-store.types'
 
 export class DataService {
@@ -18,7 +18,12 @@ export class DataService {
     const value = await this._store.getItem(this._configurationStoreKey)
     if (!value) return PluginConfigurationDefault
 
-    return JSON.parse(value) as PluginConfiguration
+    const result = JSON.parse(value) as PluginConfiguration
+
+    // old version configurations fix
+    result.saveAsSingleFile = result.saveAsSingleFile || result.saveAsSingleFile === undefined
+
+    return result
   }
 
   public async setConfigurationAsync(configuration: PluginConfiguration): Promise<void> {

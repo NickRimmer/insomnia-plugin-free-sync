@@ -6,8 +6,14 @@
   }
 
   &.form-control {
-    .auto-save-checkbox {
+    .input-label-with-error {
       display: flex;
+      justify-content: space-between;
+    }
+
+    .checkbox {
+      display: flex;
+      gap: 4px;
       align-items: center;
       color: var(--hl);
 
@@ -18,11 +24,16 @@
         margin-left: var(--padding-sm);
       }
     }
+
+    .checkboxes {
+      display: flex;
+      gap: 10px;
+    }
   }
 
   .error-message {
     color: #ff8b00;
-    padding: 4px 0 10px;
+    padding: 0;
 
     &.hide {
       display: none;
@@ -58,6 +69,6 @@
   }
 
   .modal__content {
-    padding-bottom: 20px;
+    padding-bottom: 0;
   }
 }

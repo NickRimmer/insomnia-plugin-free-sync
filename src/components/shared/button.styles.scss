@@ -1,5 +1,10 @@
 .plugin-free-sync {
-  &.btn-icon--left {
-    margin-right: .2em;
+
+  &.btn--super-duper-compact {
+    gap: 4px;
+    display: flex;
+    align-items: center;
+    padding-bottom: var(--padding-xs);
+    padding-top: var(--padding-xs);
   }
 }
