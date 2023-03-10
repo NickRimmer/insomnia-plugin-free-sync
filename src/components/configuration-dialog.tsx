@@ -83,19 +83,19 @@ export const ConfigurationDialog: FC<ConfigurationDialogProps> = ({workspaceId, 
                 onClick={onSelectFileClickedAsync}>{configuration.saveAsSingleFile ? 'Select file...' : 'Select directory...'}</Button>
 
         <div className='checkboxes'>
-          <label className='checkbox'>
+          <label className='checkbox' title={'Save all settings in a single file'}>
             <input type={'checkbox'}
                    onChange={e => onSaveAsSingleFileChangedAsync(e.target.checked)}
                    checked={configuration.saveAsSingleFile}/>
             As a single file
           </label>
 
-          <label className='checkbox'>
+          <label className='checkbox' title={'Not available yet'}>
             <input type={'checkbox'}
                    disabled={true}
                    onChange={e => onAutoSaveChangedAsync(e.target.checked)}
                    checked={configuration.autoSave}/>
-            Auto save on changes
+            Auto save
           </label>
         </div>
       </div>
