@@ -16,9 +16,9 @@ export const readAction: InsomniaWorkspaceAction = {
 const actionAsync = async (context: InsomniaContext, models: InsomniaWorkspaceActionModels): Promise<void> => {
   const dataService = new DataService(models.workspace._id, context.store)
   const configuration = await dataService.getConfigurationAsync()
-  const workspaceService: WorkspaceServiceBase = configuration.SaveAndLoadAsMultipleFiles
-    ? new WorkspaceServiceMultipleFiles(dataService, context.data, models.workspace)
-    : new WorkspaceServiceSingleFile(dataService, context.data, models.workspace)
+  const workspaceService: WorkspaceServiceBase = configuration.saveAsSingleFile
+    ? new WorkspaceServiceSingleFile(dataService, context.data, models.workspace)
+    : new WorkspaceServiceMultipleFiles(dataService, context.data, models.workspace)
 
   try {
     const result = await workspaceService.importAsync()

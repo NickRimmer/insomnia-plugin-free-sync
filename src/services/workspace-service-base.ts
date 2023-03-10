@@ -1,8 +1,8 @@
 ﻿import { DataService } from './data-service'
 import { InsomniaContextData } from '../insomnia/types/context-data.types'
 import { InsomniaWorkspace } from '../insomnia/types/workspace.types'
-import { PluginConfiguration } from './configuration-service.types'
 import { WorkspaceRaw } from '../insomnia/types/workspace-raw.types'
+import { PluginConfiguration } from './data-service.types'
 
 export abstract class WorkspaceServiceBase {
   protected readonly _dataService: DataService
@@ -25,6 +25,49 @@ export abstract class WorkspaceServiceBase {
     this._workspace = workspace ?? (() => {
       throw new Error('Workspace data is required')
     })
+  }
+
+
+  public async exportAsync(): Promise<boolean> {
+    const data = await this.getExportDataAsync()
+    if (!data) return false
+
+    return this.saveDataAsync(data)
+  }
+
+  public async importAsync(): Promise<boolean> {
+    const data = await this.loadDataAsync()
+    if (!data) return false
+
+    const dataWorkspace = data.resources.find(x => x._type.toLowerCase() === 'workspace')
+    if (!dataWorkspace) throw new Error('Workspace not found in imported file content')
+    if (dataWorkspace._id !== this._workspace._id) throw new Error('You are trying to load data of different workspace')
+
+    await this._data.import.raw(JSON.stringify(data))
+    return true
+  }
+
+  protected abstract saveDataAsync(data: WorkspaceRaw): Promise<boolean>;
+
+  protected abstract loadDataAsync(): Promise<WorkspaceRaw | null>;
+
+  protected async getExportDataAsync(): Promise<WorkspaceRaw | null> {
+    const dataJson = await this._data.export.insomnia({
+      includePrivate: false,
+      format: 'json',
+      workspace: this._workspace,
+    })
+
+    if (!dataJson) return null
+    const configuration = await this._dataService.getConfigurationAsync()
+
+    let data = JSON.parse(dataJson) as WorkspaceRaw | null
+    if (!data) return null
+
+    data = WorkspaceServiceBase.reduceChangesNoise(data)
+    data = await WorkspaceServiceBase.filterByModelSettingsAsync(data, configuration)
+
+    return data
   }
 
   protected static stringifyExportData(data: object): string {
@@ -96,48 +139,6 @@ export abstract class WorkspaceServiceBase {
         if (resource.modified && resource.created)
           resource.modified = resource.created
       })
-
-    return data
-  }
-
-  public async exportAsync(): Promise<boolean> {
-    const data = await this.getExportDataAsync()
-    if (!data) return false
-
-    return this.saveDataAsync(data)
-  }
-
-  public async importAsync(): Promise<boolean> {
-    const data = await this.loadDataAsync()
-    if (!data) return false
-
-    const dataWorkspace = data.resources.find(x => x._type.toLowerCase() === 'workspace')
-    if (!dataWorkspace) throw new Error('Workspace not found in imported file content')
-    if (dataWorkspace._id !== this._workspace._id) throw new Error('You are trying to load data of different workspace')
-
-    await this._data.import.raw(JSON.stringify(data))
-    return true
-  }
-
-  protected abstract saveDataAsync(data: WorkspaceRaw): Promise<boolean>;
-
-  protected abstract loadDataAsync(): Promise<WorkspaceRaw | null>;
-
-  protected async getExportDataAsync(): Promise<WorkspaceRaw | null> {
-    const dataJson = await this._data.export.insomnia({
-      includePrivate: false,
-      format: 'json',
-      workspace: this._workspace,
-    })
-
-    if (!dataJson) return null
-    const configuration = await this._dataService.getConfigurationAsync()
-
-    let data = JSON.parse(dataJson) as WorkspaceRaw | null
-    if (!data) return null
-
-    data = WorkspaceServiceBase.reduceChangesNoise(data)
-    data = await WorkspaceServiceBase.filterByModelSettingsAsync(data, configuration)
 
     return data
   }

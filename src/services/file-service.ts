@@ -7,7 +7,7 @@ export const isValidPath = (path: string, asFile: boolean = true): boolean =>
   path !== undefined &&
   path.length > 0 &&
   validatePath(path) &&
-  asFile ? !!extname(path) : !extname(path)
+  (asFile ? !!extname(path) : !extname(path))
 
 const validatePath = (path: string | null | undefined): boolean =>
   path !== null &&

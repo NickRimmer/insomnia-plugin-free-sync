@@ -6,23 +6,22 @@ import { mkdir, readFile, rm, writeFile } from 'fs/promises'
 import { promises } from 'fs'
 
 export class WorkspaceServiceMultipleFiles extends WorkspaceServiceBase {
-  private readonly multipleFileSubfolderRelativePath = '../insomniaData' //TODO store to the same folder with base file
+  private static readonly metaFileName: string = 'meta.json'
 
   protected async loadDataAsync(): Promise<WorkspaceRaw | null> {
     const configuration = await this._dataService.getConfigurationAsync()
     if (!isValidPath(configuration.filePath, false)) return null
 
-    const metaDataJson = await readFile(path.join(configuration.filePath!), {encoding: 'utf8'})
+    const metaDataJson = await readFile(path.join(configuration.filePath!, WorkspaceServiceMultipleFiles.metaFileName), {encoding: 'utf8'})
     if (!metaDataJson) return null
 
     const workspace = JSON.parse(metaDataJson)
     workspace.resources = []
 
-    const multipleFileSubFolder = path.join(configuration.filePath!, this.multipleFileSubfolderRelativePath)
-    const subdirectories = await promises.readdir(multipleFileSubFolder)
+    const subdirectories = await promises.readdir(configuration.filePath)
 
-    for await (const subdirectory of subdirectories) {
-      const currentResourceTypeSubdirectory = path.join(multipleFileSubFolder, subdirectory)
+    for await (const subdirectory of subdirectories.filter(x => isValidPath(x, false))) {
+      const currentResourceTypeSubdirectory = path.join(configuration.filePath, subdirectory)
       const files = await promises.readdir(currentResourceTypeSubdirectory)
 
       for (const file of files) {
@@ -41,14 +40,12 @@ export class WorkspaceServiceMultipleFiles extends WorkspaceServiceBase {
     const configuration = await this._dataService.getConfigurationAsync()
     if (!isValidPath(configuration.filePath, false)) return false
 
-    const multipleFileSubFolder = path.join(configuration.filePath!, this.multipleFileSubfolderRelativePath)
-
     //TODO backup old
-    if (await exists(multipleFileSubFolder)) await rm(multipleFileSubFolder, {recursive: true, force: true})
-    await mkdir(multipleFileSubFolder)
+    if (await exists(configuration.filePath)) await rm(configuration.filePath, {recursive: true, force: true})
+    await mkdir(configuration.filePath)
 
     for await(const resource of data.resources) {
-      const resourceFolderPath = path.join(multipleFileSubFolder, resource._type)
+      const resourceFolderPath = path.join(configuration.filePath, resource._type)
       const resourceFilePath = path.join(resourceFolderPath, `${resource._id}.json`)
 
       if (!(await exists(resourceFolderPath))) await mkdir(resourceFolderPath)
@@ -56,7 +53,10 @@ export class WorkspaceServiceMultipleFiles extends WorkspaceServiceBase {
     }
 
     data.resources = []
-    await writeFile(configuration.filePath!, WorkspaceServiceBase.stringifyExportData(data), {encoding: 'utf8'})
+    await writeFile(
+      path.join(configuration.filePath!, WorkspaceServiceMultipleFiles.metaFileName),
+      WorkspaceServiceBase.stringifyExportData(data), {encoding: 'utf8'},
+    )
     return true
   }
 
