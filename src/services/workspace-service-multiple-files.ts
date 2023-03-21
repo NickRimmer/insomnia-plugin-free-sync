@@ -52,7 +52,12 @@ export class WorkspaceServiceMultipleFiles extends WorkspaceServiceBase {
       await writeFile(resourceFilePath, WorkspaceServiceBase.stringifyExportData(resource), {encoding: 'utf8'})
     }
 
-    data.resources = []
+    data.resources = data.resources.filter(x => x._id.startsWith('wrk') || (x._id.startsWith('spc') || (x._id.startsWith('env') && x.name === "Base Environment")))
+    data.resources.forEach(resource => {
+      if(resource?.contents) resource.contents = "";
+      if(resource?.data) resource.data = {};
+      if(resource?.dataPropertyOrder) resource.dataPropertyOrder = {};
+    })
     await writeFile(
       path.join(configuration.filePath!, WorkspaceServiceMultipleFiles.metaFileName),
       WorkspaceServiceBase.stringifyExportData(data), {encoding: 'utf8'},
