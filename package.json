@@ -19,7 +19,8 @@
     "clean": "rimraf dist",
     "watch": "npm-watch build",
     "publish": "node npm/generate-package.js && copyfiles -u 2 ./npm/content/* ./dist/ && cd dist && npm publish",
-    "publish-dry": "node npm/generate-package.js && copyfiles -u 2 ./npm/content/* ./dist/ && cd dist && npm publish --dry-run"
+    "publish-dry": "node npm/generate-package.js && copyfiles -u 2 ./npm/content/* ./dist/ && cd dist && npm publish --dry-run",
+    "install": "copyfiles -u 1 ./dist/* %appdata%/insomnia-app/plugins/insomnia-plugin-free-sync"
   },
   "insomnia": {
     "name": "free-sync",

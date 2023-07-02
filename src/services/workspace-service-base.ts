@@ -27,7 +27,6 @@ export abstract class WorkspaceServiceBase {
     })
   }
 
-
   public async exportAsync(): Promise<boolean> {
     const data = await this.getExportDataAsync()
     if (!data) return false
@@ -39,11 +38,7 @@ export abstract class WorkspaceServiceBase {
     const data = await this.loadDataAsync()
     if (!data) return false
 
-    const dataWorkspace = data.resources.find(x => x._type.toLowerCase() === 'workspace')
-    if (!dataWorkspace) throw new Error('Workspace not found in imported file content')
-    if (dataWorkspace._id !== this._workspace._id) throw new Error('You are trying to load data of different workspace')
-
-    await this._data.import.raw(JSON.stringify(data))
+    await this._data.syncToWorkspace.raw(JSON.stringify(data), this._workspace._id)
     return true
   }
 
