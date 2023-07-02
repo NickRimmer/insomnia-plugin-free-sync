@@ -2,12 +2,18 @@
 
 export type InsomniaContextData = {
   import: InsomniaContextDataImport
+  syncToWorkspace: InsomniaContextDataSync
   export: InsomniaContextDataExport
 }
 
 export type InsomniaContextDataImport = {
-  uri(uri: string, options?: { workspaceId?: string }): Promise<void>
-  raw(text: string, options?: { workspaceId?: string }): Promise<void>
+  uri(uri: string): Promise<void>
+  raw(text: string): Promise<void>
+}
+
+export type InsomniaContextDataSync = {
+  uri(uri: string, workspaceId: string): Promise<void>
+  raw(text: string, workspaceId: string): Promise<void>
 }
 
 export type InsomniaContextDataExport = {
