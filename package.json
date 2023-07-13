@@ -15,11 +15,15 @@
     "url": "https://github.com/NickRimmer/insomnia-plugin-free-sync/issues"
   },
   "scripts": {
-    "build": "esr esbuild.ts",
+    "build-npm": "node npm/generate-package.js && copyfiles -u 2 ./npm/content/* ./dist/",
+    "build": "esr esbuild.ts && npm run build-npm",
+    "watch-trigger": "esr esbuild.ts && npm run install",
+    "watch": "npm run build-npm && npm-watch watch-trigger",
     "clean": "rimraf dist",
-    "watch": "npm-watch build",
-    "publish": "node npm/generate-package.js && copyfiles -u 2 ./npm/content/* ./dist/ && cd dist && npm publish",
-    "publish-dry": "node npm/generate-package.js && copyfiles -u 2 ./npm/content/* ./dist/ && cd dist && npm publish --dry-run"
+    "publish": "npm run build && cd dist && npm publish",
+    "publish-dry": "npm run build && cd dist && npm publish --dry-run",
+    "install": "copyfiles -u 1 ./dist/* %appdata%/insomnia/plugins/insomnia-plugin-free-sync",
+    "install-dev": "copyfiles -u 1 ./dist/* %appdata%/insomnia-app/plugins/insomnia-plugin-free-sync"
   },
   "insomnia": {
     "name": "free-sync",
@@ -43,21 +47,25 @@
     }
   },
   "dependencies": {
-    "@types/nedb": "^1.8.11",
-    "@types/node": "^18.11.18",
-    "@types/react": "^16.14.5",
-    "@types/react-dom": "^16.9.12",
-    "@types/uuid": "^9.0.0",
     "nedb": "^1.8.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
+    "@types/nedb": "^1.8.11",
+    "@types/node": "^18.11.18",
+    "@types/react": "^16.14.5",
+    "@types/react-dom": "^16.9.12",
+    "@types/uuid": "^9.0.0",
     "copyfiles": "^2.4.1",
     "esbuild": "^0.14.29",
     "esbuild-runner": "^2.2.1",
     "esbuild-sass-plugin": "^2.4.5",
+    "@typescript-eslint/eslint-plugin": "^5.60.1",
+    "@typescript-eslint/parser": "^5.60.1",
+    "eslint": "^8.44.0",
+    "eslint-plugin-react": "^7.32.2",
     "node-sass": "^8.0.0",
     "npm-watch": "^0.11.0",
     "postcss": "^8.4.20",
